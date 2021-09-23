@@ -9,39 +9,38 @@ import lzma
 import pickle
 
 
-def create_app():
-    """Create and configure an instance of the flask application"""
-    app = Flask(__name__)
+
+"""Create and configure an instance of the flask application"""
+app = Flask(__name__)
 
     
    
     # configure app
-    app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///db.sqlite3'
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///db.sqlite3'
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # initialize database
-    DB.init_app(app)
+DB.init_app(app)
 
     # create table(s)
-    with app.app_context():
-        DB.create_all()
+with app.app_context():
+    DB.create_all()
 
    # ROOT ROUTE
-    @app.route('/', methods=["GET", "POST"])
-    def root():     
-        """Base view"""
-        resp = None
-        # When visitor types song and artist then hits a button...
-        if request.method == "POST":
-            song_name = request.form["song_name"]
-            artist_name = request.form["artist_name"]
+@app.route('/', methods=["GET", "POST"])
+def root():     
+    """Base view"""
+    resp = None
+    # When visitor types song and artist then hits a button...
+    if request.method == "POST":
+        song_name = request.form["song_name"]
+        artist_name = request.form["artist_name"]
             
-            # #suggestions happen here; start by retrieving ids of similar tracks
-            # spotify_ids = suggest_ids(song_name, artist_name, orig_df, scaled_df) 
-            # tracks=DB.session.query(Song).filter(Song.id.in_(spotify_ids)).all()
-            # top_hits = tracks[:20]
-
-            # get genres for a simple plot
+        # #suggestions happen here; start by retrieving ids of similar tracks
+        # spotify_ids = suggest_ids(song_name, artist_name, orig_df, scaled_df) 
+        # tracks=DB.session.query(Song).filter(Song.id.in_(spotify_ids)).all()
+        # top_hits = tracks[:20]
+        # get genres for a simple plot
             # genre_list = relevant_genres(tracks)
             # genre_series = pd.Series(genre_list)
             """with regex, anything rock could be grouped together, anything pop could be grouped together, etc.; then the resulting genre_series.value_counts() could be plotted in a horizontal bar chart -- or at least the biggest few categories could be -- with value_counts().index as tick labels"""
@@ -50,22 +49,20 @@ def create_app():
             
             # return render_template('predict.html',title='home',top_hits= top_hits)
 
-            w = Wrangler()
-            orig_df = w.wrangle(raw_df)
-            scaled_df = w.transform(orig_df)
+        w = Wrangler()
+        orig_df = w.wrangle(raw_df)
+        scaled_df = w.transform(orig_df)
 
-            with lzma.open("model.xz", "rb") as f:
-                model = pickle.load(f)
+        with lzma.open("model.xz", "rb") as f:
+            model = pickle.load(f)
             
             # song = request.values['song_name']
             # artist = request.values['artist_name']
             
 
-            output = generate_output(song_name, artist_name, orig_df, scaled_df, model)
-            print(output)
+        output = generate_output(song_name, artist_name, orig_df, scaled_df, model)
+        print(output)
 
-            return render_template('predict.html', title = 'home', top_hits = output) # might need to change format of output - needs a list (was top_hits = [])
-        else: 
-            return render_template('predict.html', title = 'home', top_hits = [])
-
-    return app
+        return render_template('predict.html', title = 'home', top_hits = output) # might need to change format of output - needs a list (was top_hits = [])
+    else: 
+        return render_template('predict.html', title = 'home', top_hits = [])
